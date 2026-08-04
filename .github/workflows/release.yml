@@ -7,25 +7,26 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    env:
+      PIP_INDEX_URL: https://:2023-01-21@time-machines-pypi.sealsecurity.io/
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
-        python-version: '3.x'
+        python-version: '3.11'
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install setuptools wheel twine
-    - name: Build and publish
-      env:
-        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        pip install setuptools==66.1.1 wheel twine
+    - name: Build
       run: |
-        make release
+        make sdist
+        twine check dist/*
 
-    - name: Publish Documentation
-      run: |
-        pip install -r requirements-docs.txt
-        pip install -e .
-        mkdocs gh-deploy --force
+    - name: Upload distributions
+      uses: actions/upload-artifact@v4
+      with:
+        name: dist
+        path: dist/*
+        if-no-files-found: error
